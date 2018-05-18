@@ -14,6 +14,28 @@ The current release of "iMTB Report" Shiny app uses the latest version of MTB-Re
 
 
 
+Dependencies
+------------
+```r
+install.packages("shiny")
+install.packages("DT")
+install.packages("shinydashboard")
+install.packages("knitr")
+install.packages("stringr")
+install.packages("xtable")
+install.packages("ggplot2")
+install.packages("pander")
+install.packages("timeSeries")
+install.packages("tools")
+devtools::install_github("mariodeng/FirebrowseR")
+```
+
+Requires LaTeX an Texinfo for the generation of PDF reports. In Linux, install them with:
+```
+sudo apt-get install texlive-full
+sudo apt-get install texinfo
+```
+
 
 Installation
 ------------
@@ -43,27 +65,6 @@ setwd("~/iMTB-Report")
 runApp()
 ```
 
-Dependencies
-------------
-```r
-install.packages("shiny")
-install.packages("DT")
-install.packages("shinydashboard")
-install.packages("knitr")
-install.packages("stringr")
-install.packages("xtable")
-install.packages("ggplot2")
-install.packages("pander")
-install.packages("timeSeries")
-install.packages("tools")
-devtools::install_github("mariodeng/FirebrowseR")
-```
-
-Requires LaTeX an Texinfo for the generation of PDF reports. In Linux, install them with:
-```
-sudo apt-get install texlive-full
-sudo apt-get install texinfo
-```
 
 
 
