@@ -18,6 +18,7 @@ Dependencies
 ------------
 ```r
 install.packages("shiny")
+install.packages("shinyjs")
 install.packages("DT")
 install.packages("shinydashboard")
 install.packages("knitr")
@@ -47,6 +48,7 @@ There are many ways to download and run it:
 
 ```R
 library(shiny)
+library(shinyjs)
 
 # Easiest way is to use runGitHub
 runGitHub("iMTB-Report", "jperera-bel")
@@ -62,6 +64,8 @@ Or you can clone the git repository, then use `runApp()`:
 # First clone the repository with git. If you have cloned it into
 # ~/iMTB-Report, first go to that directory, then use runApp().
 setwd("~/iMTB-Report")
+library(shiny)
+library(shinyjs)
 runApp()
 ```
 
