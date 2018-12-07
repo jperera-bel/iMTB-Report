@@ -7,7 +7,9 @@ library(knitr)
 library(ggplot2)   
 library(tools)
 library(FirebrowseR)
+library(shinyjs,lib.loc="/home/jperera/R/x86_64-pc-linux-gnu-library/3.4")
 
+NUM_PAGES <- 5
 
 #######
 # DB  #

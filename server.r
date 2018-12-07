@@ -3,8 +3,25 @@ source("helpers/get_druggable.r")
 source("helpers/get_levels.r")
 
 shinyServer(function(input, output, session) {
+  #Automatically stop a Shiny app when closing the browser tab
+  session$onSessionEnded(stopApp)
+  ########################################################
+  ######### TUTORIAL TAB ###################################
+  ########################################################
+  rv <- reactiveValues(page = 1)
+  observe({
+    toggleState(id = "prevBtn", condition = rv$page > 1)
+    toggleState(id = "nextBtn", condition = rv$page < NUM_PAGES)
+    hide(selector = ".page")
+    show(paste0("step", rv$page))
+  })
 
-
+  navPage <- function(direction) {
+    rv$page <- rv$page + direction
+  }
+  
+  observeEvent(input$prevBtn, navPage(-1))
+  observeEvent(input$nextBtn, navPage(1))
   ########################################################
   ######### UPLOAD TAB ###################################
   ########################################################
@@ -28,13 +45,13 @@ shinyServer(function(input, output, session) {
     typeof(input$inputSNV)
      inFile <- input$inputSNV
      if (is.null(inFile)){return(NULL)}
-     read.csv(inFile$datapath, sep=input$sep, col.names = c("Gene","Variant Type","aa change",input$fields), header=input$header1)
+     read.csv(inFile$datapath, sep=input$sep,  header=input$header1)
    })
 
   UPLOAD2 = reactive({
     inFile2 <- input$inputCNV
     if (is.null(inFile2)){return(NULL)}
-    read.csv(inFile2$datapath,  sep=input$sep2, col.names = c("Gene","CN Type",input$fields2), header=input$header2)
+    read.csv(inFile2$datapath,  sep=input$sep2,header=input$header2)
   })
 
   UPLOAD3 = reactive({
@@ -60,7 +77,7 @@ shinyServer(function(input, output, session) {
       }
     }
     if (input$civic=='no'){CIVIC = 'no';v_civic="not used"}
-    if (input$civic=='default'){CIVIC = read.delim("data/CIViC.csv",sep="\t");v_civic="01-May-2018"}
+    if (input$civic=='default'){CIVIC = read.delim("data/CIViC.csv",sep="\t");v_civic="01-Dec-2018"}
     if (input$civic=='other'){
       if (is.null(input$file_civic)){return(NULL)}
       CIVIC = read.delim(input$file_civic$datapath, header=T,stringsAsFactors = F,sep="\t",quote = "")
@@ -76,7 +93,10 @@ shinyServer(function(input, output, session) {
   })
   
   ## Druggable
-  DruggableUPLOAD = eventReactive(input$action,{
+  DruggableUPLOAD = eventReactive({
+    input$action
+    input$sortA
+    },{
     if (input$action > 0 && (!is.null(UPLOAD1()) || !is.null(UPLOAD2())|| !is.null(UPLOAD3()) ) ) {
       #Cancer type
       cancer <- input$cancer
@@ -85,6 +105,8 @@ shinyServer(function(input, output, session) {
       cancer_CIVIC <- paste(cancer_CIVIC,collapse = ",")
       cancer_CIVIC <- unique(strsplit(cancer_CIVIC,",")[[1]])
 
+      # Sort by
+      sort <- input$sortA
 
       #### MAF & CNV
       SNV <- UPLOAD1()[,1:3]
@@ -132,9 +154,9 @@ shinyServer(function(input, output, session) {
       levels = merge_levels(levelsGDKD,levelsCIVIC)
      # print(levels)
       # Homogeneize/clean the final table
-      table = clean_levels(levels,synonyms,sort_by="drug_freq")
+      table = clean_levels(levels,synonyms,sort_by=sort)
       #print(table)
-      return(list(druggableTARGET,druggableGDKD,druggableCIVIC,table))
+      return(list(druggableTARGET,druggableGDKD,druggableCIVIC,table,cancer_GDKD))
     } 
     else{return()}
   })
@@ -143,9 +165,32 @@ shinyServer(function(input, output, session) {
   ## Formatting output tables
   outUPLOAD <- reactive({
     L       = c(input$LevelAUPLOAD,input$LevelBUPLOAD)
-    validate(need(try(!is.null(L)),"Select one level"))
-    pattern = paste(L,collapse = "|")
-    rows    = grep(pattern,DruggableUPLOAD()[[4]]$level)
+    G       = input$actionableSNVs_rows_selected    
+    G2      = input$actionableCNVs_rows_selected   
+    gs      = c(G,G2,L)
+
+    validate(need(try(gs),'Please select gene(s) or level(s)'))
+    g=c()
+    g2=c()
+    rowsL=c()
+    rowsG=c()
+    rowsG2=c()
+    if(length(G)!=0){
+      g       = summary_actionable_genes(DruggableUPLOAD()[[4]],UPLOAD1(),UPLOAD2(),DruggableUPLOAD()[[1]])[[1]][G,1]
+      patternG= paste(g,collapse = "|")
+      rowsG   = grep(patternG,DruggableUPLOAD()[[4]]$Gene)
+    }
+    if(length(G2)!=0){
+      g2       = summary_actionable_genes(DruggableUPLOAD()[[4]],UPLOAD1(),UPLOAD2(),DruggableUPLOAD()[[1]])[[2]][G2,1]
+      patternG2= paste(g2,collapse = "|")
+      rowsG2   = grep(patternG2,DruggableUPLOAD()[[4]]$Gene)
+    }
+    if(length(L)!=0){
+      pattern = paste(L,collapse = "|")
+      rowsL    = grep(pattern,DruggableUPLOAD()[[4]]$level)
+    }
+    
+    rows    = unique(c(rowsL,rowsG,rowsG2))
     if(length(rows)!=0){
       df           = DruggableUPLOAD()[[4]][rows,]
       df$`Pat Var` = gsub("NEW","<font color='red'>",df$`Pat Var`)
@@ -157,7 +202,7 @@ shinyServer(function(input, output, session) {
       res          = grep("resistance|no|decrease",unique(df[,"Predicts"]),value=TRUE)
       sens         = grep("resistance|no|decrease",unique(df[,"Predicts"]),value=TRUE,invert = T)
 
-      datatable(df,selection="single",rownames=F,escape=F,options=list(scrollX = TRUE)) %>%
+      datatable(df,selection="single",rownames=F,escape=F,filter = 'top',options=list(scrollX = TRUE)) %>%
         formatStyle('Predicts',
           backgroundColor = styleEqual(c(sens,res), c(rep('#66b3ff',length(sens)),rep('#FF704D',length(res))))
           ) %>%
@@ -173,6 +218,25 @@ shinyServer(function(input, output, session) {
   #############
   ## OUTPUTS ##
   #############
+  output$cancerGDKD <- renderText(DruggableUPLOAD()[[5]])
+  output$actionableSNVs <- DT::renderDataTable({
+    datatable(summary_actionable_genes(DruggableUPLOAD()[[4]],UPLOAD1(),UPLOAD2(),DruggableUPLOAD()[[1]])[[1]],
+      caption = "Single Nucleotide Variants ",
+      selection  = "multiple",  
+      escape     = FALSE ,
+      rownames   = F,
+      options    = list(lengthMenu = list(c( 10, 20, 30, -1), c("10", "20", "30", "All")), 
+      pageLength = 5,sDom  = '<"top">lrt<"bottom">ip'))
+  })
+  output$actionableCNVs <- DT::renderDataTable({
+    datatable(summary_actionable_genes(DruggableUPLOAD()[[4]],UPLOAD1(),UPLOAD2(),DruggableUPLOAD()[[1]])[[2]],
+      caption = "Copy Number Variants ",
+      selection  = "multiple",  
+      escape     = FALSE ,
+      rownames   = F,
+      options    = list(lengthMenu = list(c( 10, 20, 30, -1), c("10", "20", "30", "All")), 
+      pageLength = 5,sDom  = '<"top">lrt<"bottom">ip'))
+  })
 
   output$mafUPLOAD <- DT::renderDataTable({
    # if(is.null(UPLOAD1())){return(datatable(data.frame(c("No SNVs have been provided yet")),rownames=F,colnames=""))}

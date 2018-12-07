@@ -1,11 +1,13 @@
 
 my_autocomplete_list <-sort(unique(as.character(synonyms$Shiny)))
+tutorial=c("1. Clinical","2. SNVs","3. CNVs","4. Fusions","5. Databases")
 
 sidebar <- dashboardSidebar(
   sidebarMenu(id="tab",
     tags$head(tags$style(HTML('.disclaimer_narrow {padding: 7px;background-color: #34444c ;border-radius: 25px;margin:10px;position:fixed;width:180px;bottom:0px;}
     .main-sidebar .user-panel, .sidebar-menu, .sidebar-menu>li.header {white-space: normal;overflow: hidden;}'))),
     menuItem("Home", tabName = "home",icon = icon('home')),
+    menuItem("Tutorial", tabName = "tutorial",icon = icon('info')),
     menuItem("Upload patient data", tabName = "upload", icon = icon('upload')),
     menuItem("Explore TCGA dataset", tabName = "tcga", icon = icon('navicon')),
     HTML("<p class='disclaimer_narrow'>
@@ -35,7 +37,8 @@ body <- dashboardBody(
           #clinical {text-align:left;}
           #maf td {padding: 2px 6px;}
           #cnv td {padding: 2px 6px;}
-	  #resultsTCGA td , #others td , #UPLOAD td , #othersUPLOAD td{padding: 1px 6px;}
+          #actionableSNVs td , #actionableCNVs td {padding: 2px 6px}          
+          #resultsTCGA td , #others td , #UPLOAD td , #othersUPLOAD td{padding: 1px 6px;}
 
           .dataTables_paginate {font-size:9px;}
           .dataTables_length {display: none;}
@@ -94,12 +97,12 @@ body <- dashboardBody(
              HTML("
              Shiny app source code available in <a target='_blank' href='https://github.com/jperera-bel/iMTB-Report'>GitHub</a>
              <hr>
-             Functionality corresponds to latest version of <a target='_blank' href='https://github.com/jperera-bel/MTB-Report'>MTB-Report (v1.1.0)</a>
+             Functionality corresponds to latest version of <a target='_blank' href='https://github.com/jperera-bel/MTB-Report'>MTB-Report (v1.2.0)</a>
              <hr>
              Current databases supported:
               <ul>
                 <li><a target='_blank' href='https://www.synapse.org/#!Synapse:syn2370773'>Gene Drug Knowledge Database</a>, v20.0</li>
-                <li><a target='_blank' href='https://civic.genome.wustl.edu/'>CIViC</a>, 01-May-2018</li>
+                <li><a target='_blank' href='https://civic.genome.wustl.edu/'>CIViC</a>, 01-Dec-2018</li>
                 <li><a target='_blank' href='http://archive.broadinstitute.org/cancer/cga/target'>TARGET</a>, v3</li>
                 <li><a target='_blank' href='https://doi.org/10.1093/jnci/djv098'>Meric-Bernstam et al., 2015</a></li>
               </ul>
@@ -109,6 +112,10 @@ body <- dashboardBody(
         ) # close columns 3
       ) # close Fluidrow
     ), # closes tabItem 1
+    tabItem("tutorial",
+      "Work in progress"
+
+    ),# closes tabItem tutorial
     tabItem("upload",
       HTML("<h2><strong>Generate MTB-Report of user defined data</strong> </h2>"),
       box(width = 10,
@@ -137,7 +144,7 @@ body <- dashboardBody(
                      )
             )
           ),
-         tabPanel(title=HTML("SNVs"),
+         tabPanel(title=HTML("2. SNVs"),
             HTML("<b> Upload file with <u>S</u>ingle <u>N</u>ucloetide <u>V</u>ariants (SNVs). Check format <a href='snv_legend.png' target='_blank'>here</a> </b>"),
             br(),
             br(),
@@ -151,8 +158,7 @@ body <- dashboardBody(
                 radioButtons('sep', 'Separator',c(Comma=',',Semicolon=';',Tab='\t'),','),
                 checkboxInput(inputId = 'header1', label = 'Header', value = F)
                 ),
-              column(width=4,checkboxGroupInput('fields', 'Extra Columns',choices = 
-                                  c("Variant Freq.","Quality"))
+              column(width=4,HTML('Mandatory columns: Gene Symbol, variant type, aminoacid change')
               ),
              HTML("")
           )),
@@ -171,8 +177,7 @@ body <- dashboardBody(
                 checkboxInput(inputId = 'header2', label = 'Header', value = F)
               ),
               column(width=4,
-                     checkboxGroupInput('fields2', 'Extra Columns',choices = 
-                                          c("Segment Mean","Size (Kb)")))
+                     column(width=4,HTML('Mandatory columns: Gene Symbol, variant type')))
           )),
          tabPanel(title="4. Fusions",
             HTML("<b> Upload file with fusions. Check format <a href='tx_legend.png' target='_blank'>here</a> </b>"),
@@ -256,35 +261,54 @@ body <- dashboardBody(
               <a target='_blank' href='https://doi.org/10.1186/s13073-018-0529-2'>publication.</a> </h4> "
               ),
              br(),
-             box(solidHeader = T, width = 12,collapsible = F,
-                 column(width=3,                                          
+             box(title = "Summary of Actionable Variants: Filter & Selection",width = 12,collapsible = F,status = 'success',solidHeader = T,
+                 column(width=6, 
+                   p(strong( "Select Actionable Variants " )) ,
+              #     p(strong( "Single Nucleotide Variants " )) ,
+                   DT::dataTableOutput('actionableSNVs'),
+                   br(),
+               #    p(strong( "Copy Number Variants " )) ,
+                   DT::dataTableOutput('actionableCNVs')
+                  ),
+                  column(width=3,    
+                    p(strong( "Select Levels of Evidence" )) ,HTML('<font color="gray">Evidence on SAME cancer type</font>'),
                         checkboxGroupInput(
-                          "LevelAUPLOAD","Evidence on SAME cancer type:",
+                          "LevelAUPLOAD","",
                           c("A1) FDA & Guidelines"="A1","A2) Clinical Trials"="A2","A3) Pre-clinical"="A3"),selected="none"
                           ),
+                        HTML('<font color="gray">Evidence on OTHER cancer types</font>'),
                         checkboxGroupInput(
-                          "LevelBUPLOAD","Evidence on OTHER cancer types:",
+                          "LevelBUPLOAD","",
                           c("B1) FDA & Guidelines"="B1","B2) Clinical Trials"="B2","B3) Pre-clinical"="B3"),selected="none"
                           ),
-                        plotOutput(outputId = "figureUPLOAD",height = "170px" , width = "80%"
-                          ),
-                        br(),
-                        checkboxInput("checkothersUPLOAD","Display other genes without evidence level",value = FALSE),
-                        conditionalPanel(
+                        checkboxInput("checkothersUPLOAD","Display other genes without evidence level",value = FALSE)
+                  ),
+                 column(width=3,
+                  br(),
+                  plotOutput(outputId = "figureUPLOAD",height = "170px" , width = "80%"),
+                  conditionalPanel(
                           condition=" typeof output.othersUPLOAD != 'undefined' || typeof output.figureUPLOAD != 'undefined'",
+                          br(),
+                          radioButtons('sortA',"Sort results by:",c("Genes"="genes","Drugs"="drug","Levels of Evidence"="levels"),selected="genes"),
                           h5(strong("Download results")),
                           downloadButton('reportUPLOAD','Download report (.pdf)'),br(),
                           downloadButton('csvUPLOAD','Download report (.csv)')
                         )
+
+                  )
                  ),
-                 column(width=9,
+             br(),
+             box(title = "Details of Actionable Variants",width = 12,collapsible = F,status = 'success',solidHeader = T,
+                 column(width=12,
+                #  textOutput('cancerGDKD'),
                   # Display Results
                     DT::dataTableOutput('UPLOAD'),
                   # Display Other Results
                     conditionalPanel(
                       condition = "input.checkothersUPLOAD",
                       DT::dataTableOutput('othersUPLOAD')
-                    )
+                    ),
+                    br()
                  )
              )
         ) # close box with results

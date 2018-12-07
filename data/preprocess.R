@@ -8,8 +8,8 @@ library(xlsx)
 
 	
 gdkd         = read.xlsx2('Knowledge_database_v20.0.xlsx', header=TRUE, sheetIndex = 1,colIndex = c(1:45))
-civic        = read.delim('01-May-2018-ClinicalEvidenceSummaries.tsv', header=T,stringsAsFactors = F,sep="\t",quote = "")
-#target_meric = read.xlsx2('TARGET_db_v3_02142015.xlsx', header=TRUE, sheetIndex = 1)
+civic        = read.delim('01-Dec-2018-ClinicalEvidenceSummaries.tsv', header=T,stringsAsFactors = F,sep="\t",quote = "")
+
 
 # Small changes
 gdkd$Gene  = gsub(" ", "", gdkd$Gene)

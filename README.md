@@ -8,7 +8,7 @@ The Shiny app relies on the method described in [Perera-Bel et al., 2018](https:
 The current release of "iMTB Report" Shiny app uses the latest version of MTB-Report (v1.1.0), which includes the following database versions:
 
 - [Gene Drug Knowledge Database](https://www.synapse.org/#!Synapse:syn2370773): Dienstmann et al., Cancer discovery 5.2 (2015), v20.0
-- [CIViC](https://civic.genome.wustl.edu/): Griffith et al., Nat Genet (2017), release 01-May-2018
+- [CIViC](https://civic.genome.wustl.edu/): Griffith et al., Nat Genet (2017), release 01-Dec-2018
 - [TARGET](http://archive.broadinstitute.org/cancer/cga/target): Van Allen et al., Nat Med (2014), v3
 - Meric-Bernstam et al., J Natl Cancer Inst. (2015)
 
@@ -42,7 +42,7 @@ Installation
 
 If you are not familiar with R, you can visit our [iMTB Report webpage](http://www.ams.med.uni-goettingen.de:3838/iMTB-Report/app).
 
-Alternatively, you can run it as an stand-alone application in your local computer. Be aware of the dependencies (see next section).
+Alternatively, you can run it as an stand-alone application in your local computer. Be aware of the [dependencies](#dependencies).
 There are many ways to download and run it:
 
 ```R

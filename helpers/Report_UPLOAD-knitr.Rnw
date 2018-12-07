@@ -105,13 +105,13 @@ col_levels = function(x){
 col_association = function(x){
   cols=c()
   for (i in x){
-    if(i=="sensitivity"||i=="sensitivity "||i=="response"||i=="response "||i=="increased benefit"){
+    if(i=="sensitivity"||i=="sensitivity "||i=="response"||i=="response "||i=="increased benefit"||i=="sensitivity/response"){
       cols=c(cols,paste("\\textcolor[HTML]{388E3C}{", formatC(i, dig=2, format="f"), "}"))
     }
-    if(i=="resistance"||i=="resistance "||i=="no response"||i==" no response"||i=="resistance or non-response"||i=="no sensitivity"||i=="decreased sensitivity"||i=="reduced sensitivity"){
+    if(i=="resistance"||i=="resistance "||i=="no response"||i==" no response"||i=="resistance or non-response"||i=="no sensitivity"||i=="decreased sensitivity"||i=="reduced sensitivity"||i=="adverse response"){
       cols=c(cols,paste("\\textcolor[HTML]{C62828}{", formatC(i, dig=2, format="f"), "}"))
     }
-    if(is.na(i)||i=="n/a"){
+    if(is.na(i)||i=="n/a"||i=="N/A"||i==""){
       cols=c(cols,paste("\\textcolor[HTML]{388E3C}{", formatC(i, dig=2, format="f"), "}"))
     }
   }
@@ -126,6 +126,8 @@ cnv    <- UPLOAD2()
 tx     <- UPLOAD3()
 A      <- DruggableUPLOAD()[[4]]
 druggableTARGET <- DruggableUPLOAD()[[1]]
+v_gdkd <- UPLOAD_DB()[[3]]
+v_civic <- UPLOAD_DB()[[4]]
 
 @
 
@@ -157,7 +159,7 @@ druggableTARGET <- DruggableUPLOAD()[[1]]
 
 \fontsize{8}{9}\selectfont
 %\vspace{0.3cm}
-\textbf{Method:} Somatic variants of the patient (mutations, amplifications, deletions, rearrangments) are searched in curated databases of predictive biomarkers (GKDB\footnote{Dienstmann et al., Cancer Discov (2015), v20}, CIViC\footnote{Griffith et al., Nat Genet (2017), 1-Feb-2018}) and reported according to their clinical evidence (see Levels of Evidence). In the following two tables (SNVs and CNVs), basic information of the somatic variants with relevant clinical implications can be found: \\
+\textbf{Method:} Somatic variants of the patient (mutations, amplifications, deletions, rearrangments) are searched in curated databases of predictive biomarkers (GKDB\footnote{Dienstmann et al., Cancer Discov (2015), \Sexpr{v_gdkd}}, CIViC\footnote{Griffith et al., Nat Genet (2017), \Sexpr{v_civic}}) and reported according to their clinical evidence (see Levels of Evidence). In the following two tables (SNVs and CNVs), basic information of the somatic variants with relevant clinical implications can be found: \\
 
 \vspace{-0.5cm}
 
@@ -218,21 +220,16 @@ colnames(tab_summary_snvs) <- paste("\\textbf{",colnames(tab_summary_snvs),"}")
 
  ## CNVs
 tab_summary_cnvs <- tab_summary[grep("ampl\\.|del\\.",tab_summary$`Pat Var`),]
-#cnvs <- tab_summary_cnv$Gene[grep("ampl\\.|del\\.",tab_summary$`Pat Var`)] %in% cnv[,1]
 if (!is.null(tab_summary_cnvs) & nrow(tab_summary_cnvs)!=0 ){
-#if (sum(cnvs)!=0){
 j <- na.omit(match(tab_summary_cnvs$Gene,cnv[,1]))
 tab_summary_cnvs <- cbind(tab_summary_cnvs,cnv[j,setdiff(1:ncol(cnv),1:2)])
-#if (!is.null(tab_summary_cnvs$Size)){
-#	tab_summary_cnvs$Size <- round(as.numeric(tab_summary_cnvs[,"Size"]/1000000),1)
-#}
 twice <- grep(",",tab_summary_cnvs$`Pat Var`)
-#if (length(twice)!=0){
 for (t in twice){
   vars=strsplit(tab_summary_cnvs[t,"Pat Var"],", ")[[1]]
   tab_summary_cnvs[t,"Pat Var"]=vars[grep("ampl\\.|del\\.",vars)]
 }
 
+colnames(cnv) = gsub("\\^|_"," ",colnames(cnv))
 colnames(tab_summary_cnvs) <- c("Gene","Patient's Variant","Level of Evidence",colnames(cnv)[setdiff(1:ncol(cnv),1:2)])
 colnames(tab_summary_cnvs) <- paste("\\textbf{",colnames(tab_summary_cnvs),"}")
 
@@ -253,7 +250,7 @@ colnames(tab_summary_cnvs) <- paste("\\textbf{",colnames(tab_summary_cnvs),"}")
 \textbf{Levels of Evidence:} Findings are classified into 6 levels of evidence combining the \textbf{axis A-B} and the \textbf{axis 1-2-3}. Level A means evidence in the same cancer type. Level B means evidence in any other cancer type. On the 1-2-3 axis, level 1 means evidence supported by drug approval organizations or clinical guidelines, level 2 contains clinical evidence (clinical trials, case reports) and level 3 consists of preclinical evidence\\
 
 
-\textbf{Table of Results:} All the predicitve associations are detailed in this table. The results are sorted by 1) drug frequency, 2) levels of evidence (A1-B1-A2-B2-A3-B3). To allow a quick interpretation, the type of association (response, resistance) is colored (green, red) and new variants are gray. 
+\textbf{Table of Results:} All the predictive associations are detailed in this table. The results are sorted by 1) drug frequency, 2) levels of evidence (A1-B1-A2-B2-A3-B3). To allow a quick interpretation, the type of association (response, resistance) is colored (green, red) and new variants are gray. 
 
 
 <<label=tab1, echo=FALSE, results='asis',warning=FALSE,message=FALSE>>=
@@ -292,7 +289,7 @@ for (drug in names(sort(table(d),decreasing = TRUE))){
 }
 
 
-A2 <- A2[final_order,]
+#A2 <- A2[final_order,]
 
 #Remove genes when duplicated
 c=1

@@ -1,4 +1,22 @@
 ______________________________________________
+ 		v0.2.0
+	    Fri 7 Dec, 2018
+______________________________________________
+
+Update CIViC; improved layout; filters for results 
+
+
+DATABASES UPDATES
+=================
+   - CIViC: Release from 01-Dec-2018
+
+FUNCTIONALITY
+=============   
+   - MTB-Report (v1.2.0). Updates: 
+   	- Created function summary_actionable_genes()
+  	- Modified function match_SNV_CIVIC()
+   
+______________________________________________
  		v0.1.1
 	    Fri May 18, 2018
 ______________________________________________
@@ -13,7 +31,7 @@ ______________________________________________
 	    Thu May 17, 2018
 ______________________________________________
  
-First commit
+First release
 
 
 DATABASES
