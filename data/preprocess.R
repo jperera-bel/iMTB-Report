@@ -10,7 +10,6 @@ library(xlsx)
 gdkd         = read.xlsx2('Knowledge_database_v20.0.xlsx', header=TRUE, sheetIndex = 1,colIndex = c(1:45))
 civic        = read.delim('01-Dec-2018-ClinicalEvidenceSummaries.tsv', header=T,stringsAsFactors = F,sep="\t",quote = "")
 
-
 # Small changes
 gdkd$Gene  = gsub(" ", "", gdkd$Gene)
 for (c in colnames(gdkd)){
@@ -21,6 +20,12 @@ for (c in colnames(gdkd)){
 for (c in grep("PMID",colnames(gdkd))){
   gdkd[,c] = gsub("\\^|_","",gdkd[,c])
 }
+
+
+for (c in grep("citation_id",colnames(civic))){
+  colnames(civic)[c] = gsub("citation_id","pubmed_id",colnames(civic)[c])
+}
+
 civic <- civic[which(civic$evidence_type=="Predictive"),]
 
 # Aggregate databases (join variants with same evidence of: disease, association, drug, evidence level)
